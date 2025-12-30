@@ -1,0 +1,46 @@
+############################
+# Build / .NET
+############################
+bin/
+obj/
+
+############################
+# Visual Studio / IDEs
+############################
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+############################
+# Logs
+############################
+*.log
+
+############################
+# Bases de datos locales
+############################
+*.db
+*.db-shm
+*.db-wal
+
+############################
+# Secrets / entorno local
+############################
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+.env
+.env.*
+*.pfx
+*.pem
+*.key
+
+############################
+# Sistema operativo
+############################
+Thumbs.db
+.DS_Store
