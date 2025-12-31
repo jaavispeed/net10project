@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace PulseTrain.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251231180241_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,8 +35,9 @@ namespace PulseTrain.Migrations
                     b.Property<int>("Edad")
                         .HasColumnType("int");
 
-                    b.Property<int>("EstadoId")
-                        .HasColumnType("int");
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("FechaActualizacion")
                         .HasColumnType("datetime2");
@@ -50,45 +54,9 @@ namespace PulseTrain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EstadoId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("Clientes");
-                });
-
-            modelBuilder.Entity("PulseTrain.Models.Estado", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Estados");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Status = "Activo"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Status = "Inactivo"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Status = "Suspendido"
-                        });
                 });
 
             modelBuilder.Entity("PulseTrain.Models.User", b =>
@@ -126,19 +94,11 @@ namespace PulseTrain.Migrations
 
             modelBuilder.Entity("PulseTrain.Models.Cliente", b =>
                 {
-                    b.HasOne("PulseTrain.Models.Estado", "Estado")
-                        .WithMany()
-                        .HasForeignKey("EstadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("PulseTrain.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Estado");
 
                     b.Navigation("User");
                 });

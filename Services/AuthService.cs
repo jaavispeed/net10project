@@ -11,6 +11,8 @@ public interface IAuthService
 {
     Task<User> RegisterAsync(
         string email,
+        string nombre,
+        string apellido,
         string password,
         CancellationToken cancellationToken = default
     );
@@ -29,6 +31,8 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
 
     public async Task<User> RegisterAsync(
         string email,
+        string nombre,
+        string apellido,
         string password,
         CancellationToken cancellationToken = default
     )
@@ -57,6 +61,8 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
         var user = new User
         {
             Email = email,
+            Nombre = nombre,
+            Apellido = apellido,
             Password = encriptedPassword,
             Role = RoleDefault,
         };

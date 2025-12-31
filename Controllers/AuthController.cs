@@ -16,7 +16,12 @@ public class AuthController(ISender sender, IMapper mapper) : SharedController
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        var command = new RegisterCommand(request.Email, request.Password);
+        var command = new RegisterCommand(
+            request.Email,
+            request.Nombre,
+            request.Apellido,
+            request.Password
+        );
         var result = await sender.Send(command, HttpContext.RequestAborted);
         return Ok(mapper.Map<RegisterResponse>(result));
     }
@@ -34,12 +39,18 @@ public class AuthController(ISender sender, IMapper mapper) : SharedController
     }
 }
 
-public record RegisterResponse(string Email, string Role);
+public record RegisterResponse(string Email, string Nombre, string Apellido, string Role);
 
 public class RegisterRequest
 {
     [Required(ErrorMessage = "El campo email es requerido")]
     public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El campo nombre es requerido")]
+    public string Nombre { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El campo apellido es requerido")]
+    public string Apellido { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El campo password es requerido")]
     public string Password { get; set; } = string.Empty;

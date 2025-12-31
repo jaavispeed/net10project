@@ -14,6 +14,8 @@ public class RegisterCommandHandler(IMapper mapper, IAuthService authService)
     {
         var result = await authService.RegisterAsync(
             request.Email,
+            request.Nombre,
+            request.Apellido,
             request.Password,
             cancellationToken
         );
