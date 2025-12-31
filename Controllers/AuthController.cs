@@ -1,88 +1,57 @@
-using AutoMapper;
+using System.ComponentModel.DataAnnotations;
+using MapsterMapper;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using PulseTrain.Models.Dtos;
-using PulseTrain.Repository.IRepository;
+using PulseTrain.Features.Auth.Commands.Login;
+using PulseTrain.Features.Auth.Commands.Register;
 
-namespace PulseTrain.Controllers
+namespace PulseTrain.Controllers;
+
+public class AuthController(ISender sender, IMapper mapper) : SharedController
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthController : ControllerBase
+    /// <summary>
+    /// Registra un nuevo usuario en el sistema.
+    /// </summary>
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
+    public async Task<IActionResult> Register(RegisterRequest request)
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IMapper _mapper;
+        var command = new RegisterCommand(request.Email, request.Password);
+        var result = await sender.Send(command, HttpContext.RequestAborted);
+        return Ok(mapper.Map<RegisterResponse>(result));
+    }
 
-        public AuthController(IUserRepository userRepository, IMapper mapper)
-        {
-            _userRepository = userRepository;
-            _mapper = mapper;
-        }
-
-        [HttpGet("{id:int}", Name = "GetUser")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public IActionResult GetUser(int id)
-        {
-            var user = _userRepository.GetUser(id);
-            if(user == null)
-            {
-                return NotFound();
-            }
-            var userDto = _mapper.Map<UserRegisterDto>(user);
-            return Ok(userDto);
-        }
-
-        [HttpPost("register")]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Register([FromBody] CreateUserDto createUserDto)
-        {
-           if(createUserDto == null || !ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            if(string.IsNullOrWhiteSpace(createUserDto.Email))
-            {
-                return BadRequest("El email es requerido");
-            }
-            if(string.IsNullOrWhiteSpace(createUserDto.Password))
-            {
-                return BadRequest("La contraseña es requerida");
-            }
-            if(!_userRepository.IsUniqueUser(createUserDto.Email))
-            {
-                return BadRequest("El usuario ya existe");
-            }
-            var result = await _userRepository.Register(createUserDto);
-            if(result == null)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error al registrar el usuario");
-            }
-            return CreatedAtRoute("GetUser", new { id = result.Id }, result);
-        }
-
+    /// <summary>
+    /// Autentica un usuario y retorna un token JWT.
+    /// </summary>
     [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> Login([FromBody] UserLoginDto userLoginDto)
-        {
-        if(userLoginDto == null || !ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-        var user = await _userRepository.Login(userLoginDto);
-        if(user == null)
-            {
-                return Unauthorized();
-            }
-        return Ok(user);
-        }
-
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status201Created)]
+    public async Task<IActionResult> Login(LoginRequest request)
+    {
+        var command = new LoginCommand(request.Email, request.Password);
+        var result = await sender.Send(command, HttpContext.RequestAborted);
+        return Ok(mapper.Map<LoginResponse>(result));
     }
 }
+
+public record RegisterResponse(string Email, string Role);
+
+public class RegisterRequest
+{
+    [Required(ErrorMessage = "El campo email es requerido")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El campo password es requerido")]
+    public string Password { get; set; } = string.Empty;
+};
+
+public record LoginResponse(string Email, string Role, string Token);
+
+public class LoginRequest
+{
+    [Required(ErrorMessage = "El campo email es requerido")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El campo password es requerido")]
+    public string Password { get; set; } = string.Empty;
+};
