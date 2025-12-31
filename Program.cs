@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PulseTrain.Repository;
 using PulseTrain.Repository.IRepository;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,11 +16,8 @@ builder.Services.AddAutoMapper(cfg => {
 });
 
 builder.Services.AddControllers();
-
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
@@ -29,10 +27,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapGet("/", () => Results.Redirect("/swagger"));
-
+    app.MapScalarApiReference();
+    app.MapGet("/", () => Results.Redirect("/scalar"));
 }
 
 app.UseHttpsRedirection();
