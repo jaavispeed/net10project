@@ -56,7 +56,9 @@ public class RegisterRequest
     public string Password { get; set; } = string.Empty;
 };
 
-public record LoginResponse(string Email, string Role, string Token);
+public record LoginResponse(UserDto User, string Token);
+
+public record UserDto(string Email, string Nombre, string Apellido, string Role);
 
 public class LoginRequest
 {

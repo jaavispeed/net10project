@@ -129,8 +129,14 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             ),
         };
         var token = handlerToken.CreateToken(tokenDescriptor);
-        return new LoginResultDto(user.Email, user.Role, handlerToken.WriteToken(token));
+
+        return new LoginResultDto(
+            new UserDto(user.Email, user.Nombre, user.Apellido, user.Role),
+            handlerToken.WriteToken(token)
+        );
     }
 }
 
-public record LoginResultDto(string Email, string Role, string Token);
+public record UserDto(string Email, string Nombre, string Apellido, string Role);
+
+public record LoginResultDto(UserDto User, string Token);

@@ -1,3 +1,5 @@
 namespace PulseTrain.Features.Auth.Commands.Login;
 
-public record LoginResult(string Email, string Role, string Token);
+public record LoginResult(UserDto User, string Token);
+
+public record UserDto(string Email, string Nombre, string Apellido, string Role);
