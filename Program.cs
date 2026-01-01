@@ -1,5 +1,8 @@
+using System.Text;
 using Mapster;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PulseTrain.Services;
 using Scalar.AspNetCore;
 
@@ -16,9 +19,33 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(typeof(Program).Assembly);
 });
 
+var secretKey = builder.Configuration.GetValue<string>("ApiSettings:SecretKey");
+if (string.IsNullOrEmpty(secretKey))
+{
+    throw new InvalidOperationException("SecretKey no esta configurada");
+}
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddMapster();
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+        };
+    });
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -81,6 +108,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowSpecificOrigin");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

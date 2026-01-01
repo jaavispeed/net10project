@@ -1,13 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using MapsterMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PulseTrain.Features.Auth.Commands.Login;
 using PulseTrain.Features.Auth.Commands.Register;
+using PulseTrain.Models;
+using PulseTrain.Services;
 
 namespace PulseTrain.Controllers;
 
-public class AuthController(ISender sender, IMapper mapper) : SharedController
+public class AuthController(ISender sender, IMapper mapper, IAuthService authService)
+    : SharedController
 {
     /// <summary>
     /// Registra un nuevo usuario en el sistema.
@@ -36,6 +40,23 @@ public class AuthController(ISender sender, IMapper mapper) : SharedController
         var command = new LoginCommand(request.Email, request.Password);
         var result = await sender.Send(command, HttpContext.RequestAborted);
         return Ok(mapper.Map<LoginResponse>(result));
+    }
+
+    [HttpGet("check-status")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CheckAuthStatus()
+    {
+        var authHeader = HttpContext.Request.Headers.Authorization.ToString();
+
+        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+            return Unauthorized();
+
+        var token = authHeader["Bearer ".Length..].Trim();
+        var result = await authService.CheckAuthStatus(token);
+
+        return Ok(result);
     }
 }
 
