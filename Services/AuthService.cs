@@ -3,14 +3,14 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Tokens.Experimental;
+using PulseTrain.Features.Auth.Commands.Register;
 using PulseTrain.Models;
 
 namespace PulseTrain.Services;
 
 public interface IAuthService
 {
-    Task<User> RegisterAsync(
+    Task<RegisterUserResult> RegisterAsync(
         string email,
         string nombre,
         string apellido,
@@ -36,7 +36,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
 
     private readonly string? secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
 
-    public async Task<User> RegisterAsync(
+    public async Task<RegisterUserResult> RegisterAsync(
         string email,
         string nombre,
         string apellido,
@@ -63,6 +63,11 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             throw new InvalidOperationException("El usuario ya existe");
         }
 
+        var estadoNombre = await dbContext
+            .Estados.Where(e => e.Id == EstadoActivoDefault)
+            .Select(e => e.Status)
+            .FirstAsync(cancellationToken);
+
         var encriptedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
         var user = new User
@@ -78,7 +83,13 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
         dbContext.Users.Add(user);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return user;
+        return new RegisterUserResult(
+            user.Email,
+            user.Nombre,
+            user.Apellido,
+            user.Role,
+            estadoNombre
+        );
     }
 
     public async Task<LoginResultDto> LoginAsync(
@@ -97,10 +108,12 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             throw new ArgumentException("La contraseña es requerida");
         }
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(
-            u => u.Email.ToLower().Trim() == email.ToLower().Trim(),
-            cancellationToken
-        );
+        var user = await dbContext
+            .Users.Include(u => u.Estado)
+            .FirstOrDefaultAsync(
+                u => u.Email.ToLower().Trim() == email.ToLower().Trim(),
+                cancellationToken
+            );
 
         if (user is null)
         {
@@ -117,7 +130,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
         var token = GenerateJwtToken(user);
 
         return new LoginResultDto(
-            new UserDto(user.Email, user.Nombre, user.Apellido, user.Role),
+            new UserDto(user.Email, user.Nombre, user.Apellido, user.Role, user.Estado!.Status),
             token
         );
     }
@@ -127,26 +140,21 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
         CancellationToken cancellationToken = default
     )
     {
-        // 1️⃣ Validar token (firma + expiración)
-        var principal = ValidateToken(token); // ❌ Lanza excepción si no es válido
+        var principal = ValidateToken(token);
 
-        // 2️⃣ Extraer userId
         var userId = int.Parse(principal.FindFirst("id")!.Value);
 
-        // 3️⃣ Confirmar usuario en DB
-        var user = await dbContext.Users.FirstOrDefaultAsync(
-            u => u.Id == userId,
-            cancellationToken
-        );
+        var user = await dbContext
+            .Users.Include(u => u.Estado)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
         if (user is null)
             throw new UnauthorizedAccessException("Usuario no existe");
 
-        // 4️⃣ Token válido → generar nuevo
         var newToken = GenerateJwtToken(user);
 
         return new LoginResultDto(
-            new UserDto(user.Email, user.Nombre, user.Apellido, user.Role),
+            new UserDto(user.Email, user.Nombre, user.Apellido, user.Role, user.Estado!.Status),
             newToken
         );
     }
@@ -206,6 +214,14 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
     }
 }
 
-public record UserDto(string Email, string Nombre, string Apellido, string Role);
+public record UserDto(string Email, string Nombre, string Apellido, string Role, string Estado);
 
 public record LoginResultDto(UserDto User, string Token);
+
+public record RegisterUserResult(
+    string Email,
+    string Nombre,
+    string Apellido,
+    string Role,
+    string Estado
+);

@@ -60,7 +60,13 @@ public class AuthController(ISender sender, IMapper mapper, IAuthService authSer
     }
 }
 
-public record RegisterResponse(string Email, string Nombre, string Apellido, string Role);
+public record RegisterResponse(
+    string Email,
+    string Nombre,
+    string Apellido,
+    string Role,
+    string Estado
+);
 
 public class RegisterRequest
 {
@@ -79,7 +85,7 @@ public class RegisterRequest
 
 public record LoginResponse(UserDto User, string Token);
 
-public record UserDto(string Email, string Nombre, string Apellido, string Role);
+public record UserDto(string Email, string Nombre, string Apellido, string Role, string Estado);
 
 public class LoginRequest
 {
