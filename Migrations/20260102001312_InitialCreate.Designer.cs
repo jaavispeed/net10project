@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace PulseTrain.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251231180934_AddEstadoToCliente")]
-    partial class AddEstadoToCliente
+    [Migration("20260102001312_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -110,6 +110,9 @@ namespace PulseTrain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("EstadoId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -123,6 +126,8 @@ namespace PulseTrain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EstadoId");
 
                     b.ToTable("Users");
                 });
@@ -144,6 +149,17 @@ namespace PulseTrain.Migrations
                     b.Navigation("Estado");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PulseTrain.Models.User", b =>
+                {
+                    b.HasOne("PulseTrain.Models.Estado", "Estado")
+                        .WithMany()
+                        .HasForeignKey("EstadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Estado");
                 });
 #pragma warning restore 612, 618
         }

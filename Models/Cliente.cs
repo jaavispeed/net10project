@@ -28,5 +28,5 @@ public class Cliente
     public int EstadoId { get; set; }
 
     [ForeignKey(nameof(EstadoId))]
-    public required Estado Estado { get; set; }
+    public Estado? Estado { get; set; }
 }

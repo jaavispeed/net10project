@@ -32,6 +32,8 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
     : IAuthService
 {
     private const string RoleDefault = "User";
+    private const int EstadoActivoDefault = 1;
+
     private readonly string? secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
 
     public async Task<User> RegisterAsync(
@@ -70,6 +72,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             Apellido = apellido,
             Password = encriptedPassword,
             Role = RoleDefault,
+            EstadoId = EstadoActivoDefault,
         };
 
         dbContext.Users.Add(user);
