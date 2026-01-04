@@ -1,8 +1,9 @@
 using MapsterMapper;
 using MediatR;
-using PulseTrain.Services;
+using PulseTrain.Application.DTOs;
+using PulseTrain.Infrastructure.Services;
 
-namespace PulseTrain.Features.Auth.Commands.Login;
+namespace PulseTrain.Application.Commands.Auth.Login;
 
 public class LoginCommandHandler(IMapper mapper, IAuthService authService)
     : IRequestHandler<LoginCommand, LoginResult>

@@ -1,8 +1,8 @@
 using MapsterMapper;
 using MediatR;
-using PulseTrain.Services;
+using PulseTrain.Infrastructure.Services;
 
-namespace PulseTrain.Features.Auth.Commands.Register;
+namespace PulseTrain.Application.Commands.Auth.Register;
 
 public class RegisterCommandHandler(IMapper mapper, IAuthService authService)
     : IRequestHandler<RegisterCommand, RegisterResult>

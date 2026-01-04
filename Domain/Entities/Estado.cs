@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PulseTrain.Models;
+namespace PulseTrain.Domain.Entities;
 
 public class Estado
 {

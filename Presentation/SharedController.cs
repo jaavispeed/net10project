@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace PulseTrain.Controllers;
+namespace PulseTrain.Presentation;
 
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]

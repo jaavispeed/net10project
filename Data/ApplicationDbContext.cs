@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PulseTrain.Models;
+using PulseTrain.Domain.Entities;
 
 public class ApplicationDbContext : DbContext
 {

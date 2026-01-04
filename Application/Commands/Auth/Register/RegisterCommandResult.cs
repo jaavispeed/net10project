@@ -1,4 +1,4 @@
-namespace PulseTrain.Features.Auth.Commands.Register;
+namespace PulseTrain.Application.Commands.Auth.Register;
 
 public record RegisterResult(
     string Email,

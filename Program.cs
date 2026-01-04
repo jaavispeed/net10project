@@ -3,7 +3,7 @@ using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using PulseTrain.Services;
+using PulseTrain.Infrastructure.Services;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

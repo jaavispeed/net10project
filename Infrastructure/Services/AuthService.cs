@@ -3,29 +3,28 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using PulseTrain.Features.Auth.Commands.Register;
-using PulseTrain.Models;
+using PulseTrain.Application.DTOs;
+using PulseTrain.Domain.Entities;
 
-namespace PulseTrain.Services;
+namespace PulseTrain.Infrastructure.Services;
+
+using PulseTrain.Application.Commands.Auth.Register;
 
 public interface IAuthService
 {
-    Task<RegisterUserResult> RegisterAsync(
+    Task<RegisterResult> RegisterAsync(
         string email,
         string nombre,
         string apellido,
         string password,
         CancellationToken cancellationToken = default
     );
-    Task<LoginResultDto> LoginAsync(
+    Task<LoginResult> LoginAsync(
         string email,
         string password,
         CancellationToken cancellationToken = default
     );
-    Task<LoginResultDto> CheckAuthStatus(
-        string token,
-        CancellationToken cancellationToken = default
-    );
+    Task<LoginResult> CheckAuthStatus(string token, CancellationToken cancellationToken = default);
 }
 
 public class AuthService(ApplicationDbContext dbContext, IConfiguration configuration)
@@ -36,7 +35,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
 
     private readonly string? secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
 
-    public async Task<RegisterUserResult> RegisterAsync(
+    public async Task<RegisterResult> RegisterAsync(
         string email,
         string nombre,
         string apellido,
@@ -83,16 +82,10 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
         dbContext.Users.Add(user);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return new RegisterUserResult(
-            user.Email,
-            user.Nombre,
-            user.Apellido,
-            user.Role,
-            estadoNombre
-        );
+        return new RegisterResult(user.Email, user.Nombre, user.Apellido, user.Role, estadoNombre);
     }
 
-    public async Task<LoginResultDto> LoginAsync(
+    public async Task<LoginResult> LoginAsync(
         string email,
         string password,
         CancellationToken cancellationToken = default
@@ -129,13 +122,13 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
 
         var token = GenerateJwtToken(user);
 
-        return new LoginResultDto(
+        return new LoginResult(
             new UserDto(user.Email, user.Nombre, user.Apellido, user.Role, user.Estado!.Status),
             token
         );
     }
 
-    public async Task<LoginResultDto> CheckAuthStatus(
+    public async Task<LoginResult> CheckAuthStatus(
         string token,
         CancellationToken cancellationToken = default
     )
@@ -153,7 +146,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
 
         var newToken = GenerateJwtToken(user);
 
-        return new LoginResultDto(
+        return new LoginResult(
             new UserDto(user.Email, user.Nombre, user.Apellido, user.Role, user.Estado!.Status),
             newToken
         );
@@ -213,15 +206,3 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
         return handlerToken.WriteToken(token);
     }
 }
-
-public record UserDto(string Email, string Nombre, string Apellido, string Role, string Estado);
-
-public record LoginResultDto(UserDto User, string Token);
-
-public record RegisterUserResult(
-    string Email,
-    string Nombre,
-    string Apellido,
-    string Role,
-    string Estado
-);
