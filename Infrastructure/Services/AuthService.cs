@@ -3,12 +3,13 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using PulseTrain.Application.Commands.Auth.Register;
 using PulseTrain.Application.DTOs;
+using PulseTrain.Data;
 using PulseTrain.Domain.Entities;
+using PulseTrain.Infrastructure.Repositories;
 
 namespace PulseTrain.Infrastructure.Services;
-
-using PulseTrain.Application.Commands.Auth.Register;
 
 public interface IAuthService
 {
@@ -27,8 +28,11 @@ public interface IAuthService
     Task<LoginResult> CheckAuthStatus(string token, CancellationToken cancellationToken = default);
 }
 
-public class AuthService(ApplicationDbContext dbContext, IConfiguration configuration)
-    : IAuthService
+public class AuthService(
+    IUserRepository userRepository,
+    ApplicationDbContext dbContext,
+    IConfiguration configuration
+) : IAuthService
 {
     private const string RoleDefault = "User";
     private const int EstadoActivoDefault = 1;
@@ -53,10 +57,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             throw new ArgumentException("La contraseña es requerida");
         }
 
-        var existe = await dbContext.Users.AnyAsync(
-            u => u.Email.ToLower().Trim() == email.ToLower().Trim(),
-            cancellationToken
-        );
+        var existe = await userRepository.AnyByEmailAsync(email, cancellationToken);
         if (existe)
         {
             throw new InvalidOperationException("El usuario ya existe");
@@ -79,9 +80,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             EstadoId = EstadoActivoDefault,
         };
 
-        dbContext.Users.Add(user);
-
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await userRepository.AddAsync(user, cancellationToken);
         return new RegisterResult(user.Email, user.Nombre, user.Apellido, user.Role, estadoNombre);
     }
 
@@ -101,12 +100,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
             throw new ArgumentException("La contraseña es requerida");
         }
 
-        var user = await dbContext
-            .Users.Include(u => u.Estado)
-            .FirstOrDefaultAsync(
-                u => u.Email.ToLower().Trim() == email.ToLower().Trim(),
-                cancellationToken
-            );
+        var user = await userRepository.GetByEmailWithEstadoAsync(email, cancellationToken);
 
         if (user is null)
         {
@@ -137,9 +131,7 @@ public class AuthService(ApplicationDbContext dbContext, IConfiguration configur
 
         var userId = int.Parse(principal.FindFirst("id")!.Value);
 
-        var user = await dbContext
-            .Users.Include(u => u.Estado)
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var user = await userRepository.GetByIdWithEstadoAsync(userId, cancellationToken);
 
         if (user is null)
             throw new UnauthorizedAccessException("Usuario no existe");

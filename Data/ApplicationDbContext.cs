@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PulseTrain.Domain.Entities;
 
+namespace PulseTrain.Data;
+
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

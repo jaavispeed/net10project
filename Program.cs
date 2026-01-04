@@ -3,6 +3,7 @@ using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using PulseTrain.Data;
 using PulseTrain.Infrastructure.Services;
 using Scalar.AspNetCore;
 
@@ -13,6 +14,11 @@ var dbConnectionString = builder.Configuration.GetConnectionString("ConexionSql"
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(dbConnectionString)
 );
+
+builder.Services.AddScoped<
+    PulseTrain.Infrastructure.Repositories.IUserRepository,
+    PulseTrain.Infrastructure.Repositories.UserRepository
+>();
 
 builder.Services.AddMediatR(cfg =>
 {
